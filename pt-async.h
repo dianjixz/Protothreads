@@ -12,7 +12,7 @@ void async_add_pt(struct pt_async *_async, struct pt_async *pt);
 void async_del_pt(struct pt_async *pt);
 void async_poll(struct pt_async *_async);
 
-#define PT_ASYNC_INITIALIZER(struct_name,fun) struct_name={.fun=fun,.next=0,.delete_flag=false,.pt.lc=0}
+#define PT_ASYNC_INITIALIZER(struct_name,fun) struct pt_async struct_name={.fun=fun,.next=0,.delete_flag=false,.pt.lc=0}
 
 #ifdef PT_ASYNC_IMPLEMENTATION
 
@@ -74,4 +74,5 @@ void async_poll(struct pt_async *_async)
     sync_del_pt(_head);
 }
 #endif
+
 #endif /* __PT_ASYNC_H__ */
