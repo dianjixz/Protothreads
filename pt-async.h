@@ -5,14 +5,15 @@
 struct pt_async {
     struct pt pt;
     struct pt_async *next;
-    bool delete_flag;
+    char delete_flag;
     char (*fun)(struct pt *);
 };
 void async_add_pt(struct pt_async *_async, struct pt_async *pt);
 void async_del_pt(struct pt_async *pt);
 void async_poll(struct pt_async *_async);
 
-#define PT_ASYNC_INITIALIZER(struct_name,fun) struct pt_async struct_name={.fun=fun,.next=0,.delete_flag=false,.pt.lc=0}
+#define PT_ASYNC_INITIALIZER(struct_name,func) struct pt_async struct_name={.fun=func,.next=0,.delete_flag=0,.pt.lc=0}
+#define PT_ASYNC_INIT(struct_name,func) struct_name=(struct pt_async){.fun=func,.next=0,.delete_flag=0,.pt.lc=0}
 
 #ifdef PT_ASYNC_IMPLEMENTATION
 
@@ -24,7 +25,7 @@ void async_add_pt(struct pt_async *_async, struct pt_async *pt)
         if ((_async->next == pt) || (_async->next == _head)) return;
         if(_async->next == 0){
             _async->next = pt;
-            _async->next->delete_flag = false;
+            _async->next->delete_flag = 0;
             _async->next->next = 0;
             _async->next->pt.lc = 0;
             return;
@@ -32,11 +33,11 @@ void async_add_pt(struct pt_async *_async, struct pt_async *pt)
         _async = _async->next;
     }
 }
-static bool __del_flage__ = false;
+static char __del_flage__ = 0;
 static void sync_del_pt(struct pt_async *_async)
 {
     // if (_async == 0) return;
-    if (__del_flage__ == false) return;
+    if (__del_flage__ == 0) return;
     while (_async->next != 0)
     {
         if(_async->next->delete_flag){
@@ -45,13 +46,13 @@ static void sync_del_pt(struct pt_async *_async)
         }
         _async = _async->next;
     }
-    __del_flage__ = false;
+    __del_flage__ = 0;
 }
 void async_del_pt(struct pt_async *pt)
 {
     // if(pt == 0) return;
-    pt->delete_flag = true;
-    __del_flage__ = true;
+    pt->delete_flag = 1;
+    __del_flage__ = 1;
 }
 
 void async_poll(struct pt_async *_async)
@@ -61,7 +62,7 @@ void async_poll(struct pt_async *_async)
     if (_async->next == 0) return;
     _async = _async->next;
     do {
-        if ((_async->delete_flag == false) && (_async->fun != 0)) switch (_async->fun(&_async->pt)) {
+        if ((_async->delete_flag == 0) && (_async->fun != 0)) switch (_async->fun(&_async->pt)) {
                 case PT_EXITED:
                 case PT_ENDED: {
                     async_del_pt(_async);
